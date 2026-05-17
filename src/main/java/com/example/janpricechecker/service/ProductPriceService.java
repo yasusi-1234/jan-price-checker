@@ -21,11 +21,13 @@ public class ProductPriceService {
 
     public ProductPricesResponse getPricesByJanCode(String janCode) {
         ProductDto product = productPriceMapper.findProductByJanCode(janCode);
+
         if (product == null) {
             throw new ProductNotFoundException(janCode);
         }
 
         List<PriceDto> prices = productPriceMapper.findLatestPricesByProductId(product.id());
+
         return new ProductPricesResponse(product.janCode(), product.name(), prices);
     }
 }

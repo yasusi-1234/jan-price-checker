@@ -5,6 +5,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,7 +14,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultHandler;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 
 @SpringBootTest
@@ -21,6 +26,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Sql(scripts = "classpath:test-init.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Transactional
 class ProductPriceControllerTest {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductPriceControllerTest.class);
+
+    private static final ResultHandler printResolvedExceptionCause = result -> {
+        Exception resolvedException = result.getResolvedException();
+        if (resolvedException != null) {
+            Throwable cause = resolvedException.getCause();
+            if (cause != null) {
+                log.error("Resolved exception cause: {} - {}", cause.getClass().getName(), cause.getMessage(), cause);
+            } else {
+                log.error("Resolved exception has no cause: {} - {}", resolvedException.getClass().getName(), resolvedException.getMessage(), resolvedException);
+            }
+        }
+    };
 
     @Autowired
     private MockMvc mockMvc;
@@ -37,6 +56,8 @@ class ProductPriceControllerTest {
         jdbcTemplate.update("INSERT INTO purchase_prices (id, product_id, shop_id, price_yen, fetched_at, created_at, updated_at) VALUES (2, 1, 2, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 
         mockMvc.perform(get("/products/4901234567894/prices"))
+            .andDo(print())
+            .andDo(printResolvedExceptionCause)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.janCode").value("4901234567894"))
             .andExpect(jsonPath("$.productName").value("Sample Green Tea 500ml"))
@@ -51,6 +72,8 @@ class ProductPriceControllerTest {
         jdbcTemplate.update("INSERT INTO products (id, jan_code, name, created_at, updated_at) VALUES (10, '4901234567000', 'No Price Product', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 
         mockMvc.perform(get("/products/4901234567000/prices"))
+            .andDo(print())
+            .andDo(printResolvedExceptionCause)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.janCode").value("4901234567000"))
             .andExpect(jsonPath("$.prices").isArray())
@@ -60,6 +83,8 @@ class ProductPriceControllerTest {
     @Test
     void returns404WhenJanCodeNotFound() throws Exception {
         mockMvc.perform(get("/products/4901234567999/prices"))
+            .andDo(print())
+            .andDo(printResolvedExceptionCause)
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404));
     }
