@@ -1,13 +1,12 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/jan_price_checker_test
+    username: postgres
+    password: postgres
   sql:
     init:
       mode: always
-      schema-locations: classpath:schema-test.sql
+      schema-locations: classpath:db/schema.sql
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
