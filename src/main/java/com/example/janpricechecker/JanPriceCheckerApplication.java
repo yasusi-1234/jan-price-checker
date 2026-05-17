@@ -1,0 +1,12 @@
+package com.example.janpricechecker;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class JanPriceCheckerApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(JanPriceCheckerApplication.class, args);
+    }
+}
