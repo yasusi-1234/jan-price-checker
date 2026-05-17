@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 @SpringBootTest
@@ -24,15 +24,15 @@ class ProductPriceControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private EntityManager entityManager;
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void returnsProductAndPricesSortedByPriceDesc() throws Exception {
-        entityManager.createNativeQuery("INSERT INTO products (id, jan_code, name, created_at, updated_at) VALUES (1, '4901234567894', 'Sample Green Tea 500ml', NOW(), NOW())").executeUpdate();
-        entityManager.createNativeQuery("INSERT INTO shops (id, name, created_at, updated_at) VALUES (1, 'Tokyo Recycle Mart', NOW(), NOW())").executeUpdate();
-        entityManager.createNativeQuery("INSERT INTO shops (id, name, created_at, updated_at) VALUES (2, 'Osaka Gadget Buyback', NOW(), NOW())").executeUpdate();
-        entityManager.createNativeQuery("INSERT INTO purchase_prices (id, product_id, shop_id, price_yen, fetched_at, created_at, updated_at) VALUES (1, 1, 1, 130, NOW(), NOW(), NOW())").executeUpdate();
-        entityManager.createNativeQuery("INSERT INTO purchase_prices (id, product_id, shop_id, price_yen, fetched_at, created_at, updated_at) VALUES (2, 1, 2, 100, NOW(), NOW(), NOW())").executeUpdate();
+        jdbcTemplate.update("INSERT INTO products (id, jan_code, name, created_at, updated_at) VALUES (1, '4901234567894', 'Sample Green Tea 500ml', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+        jdbcTemplate.update("INSERT INTO shops (id, name, created_at, updated_at) VALUES (1, 'Tokyo Recycle Mart', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+        jdbcTemplate.update("INSERT INTO shops (id, name, created_at, updated_at) VALUES (2, 'Osaka Gadget Buyback', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+        jdbcTemplate.update("INSERT INTO purchase_prices (id, product_id, shop_id, price_yen, fetched_at, created_at, updated_at) VALUES (1, 1, 1, 130, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+        jdbcTemplate.update("INSERT INTO purchase_prices (id, product_id, shop_id, price_yen, fetched_at, created_at, updated_at) VALUES (2, 1, 2, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 
         mockMvc.perform(get("/products/4901234567894/prices"))
             .andExpect(status().isOk())
@@ -46,7 +46,7 @@ class ProductPriceControllerTest {
 
     @Test
     void returnsEmptyPricesWhenNoPriceInfoExists() throws Exception {
-        entityManager.createNativeQuery("INSERT INTO products (id, jan_code, name, created_at, updated_at) VALUES (10, '4901234567000', 'No Price Product', NOW(), NOW())").executeUpdate();
+        jdbcTemplate.update("INSERT INTO products (id, jan_code, name, created_at, updated_at) VALUES (10, '4901234567000', 'No Price Product', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 
         mockMvc.perform(get("/products/4901234567000/prices"))
             .andExpect(status().isOk())

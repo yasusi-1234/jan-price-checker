@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.janpricechecker.mapper.ProductPriceMapper">
+
+  <resultMap id="ProductResultMap" type="com.example.janpricechecker.dto.ProductDto">
+    <id property="id" column="id"/>
+    <result property="janCode" column="jan_code"/>
+    <result property="name" column="name"/>
+  </resultMap>
+
+  <resultMap id="PriceResultMap" type="com.example.janpricechecker.dto.PriceDto">
+    <result property="shopName" column="shop_name"/>
+    <result property="priceYen" column="price_yen"/>
+    <result property="fetchedAt" column="fetched_at"/>
+  </resultMap>
+
+  <select id="findProductByJanCode" parameterType="string" resultMap="ProductResultMap">
+    SELECT id, jan_code, name
+    FROM products
+    WHERE jan_code = #{janCode}
+  </select>
+
+  <select id="findLatestPricesByProductId" parameterType="long" resultMap="PriceResultMap">
+    SELECT
+      s.name AS shop_name,
+      pp.price_yen,
+      pp.fetched_at
+    FROM purchase_prices pp
+    INNER JOIN shops s ON s.id = pp.shop_id
+    WHERE pp.product_id = #{productId}
+    ORDER BY pp.price_yen DESC
+  </select>
+
+</mapper>
