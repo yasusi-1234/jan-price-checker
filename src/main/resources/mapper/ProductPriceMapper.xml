@@ -6,15 +6,19 @@
 <mapper namespace="com.example.janpricechecker.mapper.ProductPriceMapper">
 
   <resultMap id="ProductResultMap" type="com.example.janpricechecker.dto.ProductDto">
-    <id property="id" column="id"/>
-    <result property="janCode" column="jan_code"/>
-    <result property="name" column="name"/>
+    <constructor>
+      <idArg column="id" javaType="java.lang.Long"/>
+      <arg column="jan_code" javaType="java.lang.String"/>
+      <arg column="name" javaType="java.lang.String"/>
+    </constructor>
   </resultMap>
 
   <resultMap id="PriceResultMap" type="com.example.janpricechecker.dto.PriceDto">
-    <result property="shopName" column="shop_name"/>
-    <result property="priceYen" column="price_yen"/>
-    <result property="fetchedAt" column="fetched_at"/>
+    <constructor>
+      <arg column="shop_name" javaType="java.lang.String"/>
+      <arg column="price_yen" javaType="java.lang.Integer"/>
+      <arg column="fetched_at" javaType="java.time.OffsetDateTime"/>
+    </constructor>
   </resultMap>
 
   <select id="findProductByJanCode" parameterType="string" resultMap="ProductResultMap">
