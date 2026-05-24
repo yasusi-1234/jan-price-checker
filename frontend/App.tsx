@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { CameraView, type BarcodeScanningResult, useCameraPermissions } from 'expo-camera';
 import { API_BASE_URL } from './src/config';
 
 type Price = {
@@ -28,6 +29,9 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<ProductPricesResponse | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
 
   const handleSearch = async () => {
     if (!janCode.trim()) {
@@ -62,6 +66,26 @@ export default function App() {
     }
   };
 
+  const openCamera = () => {
+    setScanned(false);
+    setIsCameraOpen(true);
+  };
+
+  const closeCamera = () => {
+    setIsCameraOpen(false);
+    setScanned(false);
+  };
+
+  const handleBarcodeScanned = (scanResult: BarcodeScanningResult) => {
+    if (scanned) {
+      return;
+    }
+
+    setScanned(true);
+    setJanCode(scanResult.data);
+    setIsCameraOpen(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -75,7 +99,32 @@ export default function App() {
           onChangeText={setJanCode}
         />
 
+        <Button title="カメラで読み取り" onPress={openCamera} />
         <Button title="検索" onPress={handleSearch} />
+
+        {isCameraOpen && (
+          <View style={styles.cameraContainer}>
+            {!permission ? (
+              <Text style={styles.subText}>カメラ権限の状態を確認中です。</Text>
+            ) : !permission.granted ? (
+              <View style={styles.permissionArea}>
+                <Text style={styles.subText}>カメラの利用には権限が必要です。</Text>
+                <Button title="カメラ権限を許可" onPress={requestPermission} />
+              </View>
+            ) : (
+              <>
+                <CameraView
+                  style={styles.camera}
+                  barcodeScannerSettings={{
+                    barcodeTypes: ['ean13', 'ean8'],
+                  }}
+                  onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+                />
+                <Button title="閉じる" onPress={closeCamera} />
+              </>
+            )}
+          </View>
+        )}
 
         {loading && <ActivityIndicator style={styles.loading} size="large" />}
 
@@ -124,6 +173,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+  },
+  cameraContainer: {
+    gap: 8,
+  },
+  permissionArea: {
+    gap: 8,
+  },
+  camera: {
+    width: '100%',
+    height: 320,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   loading: {
     marginTop: 12,
